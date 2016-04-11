@@ -1,5 +1,6 @@
-#include "dnn_kernel.h"
+#include "dnn_kernel.h"z
 #include <math.h>
+#include <immintrin.h>
 
 extern "C" int setmatY(float *Y, float *B, int row, int col) 
 {
@@ -112,19 +113,22 @@ extern "C" int updateW(float *W, float *Wdelta, int row, int col)
 extern "C" int updateB(float *E, float *B, float *Bdelta, int row, int col, float alpha)
 {	
 	int idx;
-	#pragma omp parallel for
-	float sum = 0.0f;
-	for(int i=0; i<col; i++)
+	__m256* Src1 = (__m256*) E;
+	__m256* Src2 = (__m256*) B;
+	__m256* Src3 = (__m256*) Bdelta;
+	//float sum = 0.0f;
+	__m256* sum;
+	for(int i=0; i<col/8; i++)
 	{
-		sum = 0.0f;
-		for(int j=0; j<row; j++)
+		sum = (__m256)0;
+		for(int j=0; j<row/8; j++)
 		{
 			idx = j*col + i;
-			sum += E[idx];
+			sum += Src1[idx];
 		}
 		
-		Bdelta[i] = alpha * sum;
-		B[i] += Bdelta[i];
+		Src3[i] = (__m256)alpha * sum;
+		Src2[i] += Src3[i];
 	}
 	return 0;
 }
