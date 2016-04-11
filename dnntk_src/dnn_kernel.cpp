@@ -1,7 +1,6 @@
 #include "dnn_kernel.h"
 #include <math.h>
 #include <immintrin.h>
-#include <avx2intrin.h>
 //#include <pmmintrin.h>
 //#include <xmmintrin.h>
 //#include <emmintrin.h>
@@ -117,9 +116,9 @@ extern "C" int updateW(float *W, float *Wdelta, int row, int col)
 extern "C" int updateB(float *E, float *B, float *Bdelta, int row, int col, float alpha)
 {	
 	int idx;
-	__m256i* Src1 = (__m256i*) E;
-	//__m128* Src2 = (__m128i*) B;
-	//__m128d* Src3 = (__m128d*) Bdelta;
+	__m128i* Src1 = (__m128i*) E;
+	__m128* Src2 = (__m128i*) B;
+	__m128d* Src3 = (__m128d*) Bdelta;
 	float sum = 0.0f;
 	for(int i=0; i<col; i++)
 	{
