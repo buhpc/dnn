@@ -3,8 +3,8 @@
 
 extern "C" int setmatY(float *Y, float *B, int row, int col) 
 {
+	#pragma omp parallel for
 	int idx;
-	#pragma omp parallel for collapse(2)
 	for(int i=0; i<row; i++)
 	{
 		for(int j=0; j<col; j++)
@@ -30,7 +30,7 @@ extern "C" int softmaxZ(float* in_vec, float* out_vec, int row, int col)
 	int idx, base;
 	float max, tmp;
 	float sumexp = 0.0f;
-	#pragma omp parallel for collapse(2)
+	#pragma omp paralleel for
 	for(int i=0; i<row; i++)
 	{
 		base = i*col + 0;
@@ -64,6 +64,7 @@ extern "C" int errorTrans(float *E, float *Y, int row, int col)
 {
 	float tmp;
 	int idx;
+	#pragma omp parallel for
 	for(int i=0; i<row; i++)
 	{
 		for(int j=0; j<col; j++)
@@ -80,6 +81,7 @@ extern "C" int errorOutput(float *E, float *Z, int *T, int row, int col)
 {
 	float tmp;
 	int idx;
+	#pragma omp parallel for
 	for(int i=0; i<row; i++)
 	{
 		for(int j=0; j<col; j++)
@@ -95,6 +97,7 @@ extern "C" int errorOutput(float *E, float *Z, int *T, int row, int col)
 extern "C" int updateW(float *W, float *Wdelta, int row, int col)
 {
 	int idx;
+	#pragma omp parallel for
 	for(int i=0; i<row; i++)
 	{
 		for(int j=0; j<col; j++)
@@ -109,6 +112,7 @@ extern "C" int updateW(float *W, float *Wdelta, int row, int col)
 extern "C" int updateB(float *E, float *B, float *Bdelta, int row, int col, float alpha)
 {	
 	int idx;
+	#pragma omp parallel for
 	float sum = 0.0f;
 	for(int i=0; i<col; i++)
 	{

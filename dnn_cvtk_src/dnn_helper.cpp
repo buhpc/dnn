@@ -108,7 +108,7 @@ int Interface::Initial(CpuArg& cpuArg)
 
   	fprintf(fp_log,"train_cache:          %d\n", cpuArg.chunkSize);
 	para->traincache = cpuArg.chunkSize;
-  	fprintf(fp_log,"init_randem_seed:     %ld\n", cpuArg.randomSeed);
+  	fprintf(fp_log,"init_randem_seed:     %d\n", cpuArg.randomSeed);
 	para->targ_offset = (cpuArg.featCRange -1)/2;
   	fprintf(fp_log,"targ_offset:          %d\n", para->targ_offset);
   
@@ -118,7 +118,7 @@ int Interface::Initial(CpuArg& cpuArg)
   	fprintf(fp_log,"init_randem_bias_min:		  %f\n", para->init_randem_bias_min);
 	fprintf(fp_log,"learnrate:		          %f\n", cpuArg.lRate);
 	fprintf(fp_log,"layersizes:		          ");
-	for(int j =0; j < cpuArg.dnnLayerNum; j++)
+	_Cilk_for(int j =0; j < cpuArg.dnnLayerNum; j++)
 		fprintf(fp_log,"%d,", cpuArg.dnnLayerArr[j]);
 	fprintf(fp_log,"\n");
         
@@ -127,7 +127,7 @@ int Interface::Initial(CpuArg& cpuArg)
 	fprintf(fp_log,"remainder:		          %d\n", cpuArg.remainder);
 	fprintf(fp_log,"discard_prob:		          %.6f\n", cpuArg.discard_prob);
 	fprintf(fp_log,"discardLabs:		          ");
-	for(int j =0; j < cpuArg.discard_num; j++)
+	_Cilk_for(int j =0; j < cpuArg.discard_num; j++)
 		fprintf(fp_log,"%d,", cpuArg.discard_labs[j]);
 	fprintf(fp_log, "\n");
 	/************/
@@ -194,7 +194,8 @@ void Interface::get_pfile_info(CpuArg& cpuArg)
 	read_tail(fp_targ, offset, tmpsentnum, tmpframepersent);  /// get frame per sent
   
   	///assert consistency
-  	if(tmpsentnum != total_sents || tmpframenum != total_frames)
+  	if(tmpsentnum != total_sents || 
+		tmpframenum != total_frames)
   	{
   		fprintf(fp_log, "frames or sentence num in target pfile and data pfile is not consistent.\n");
 	  	exit(0);
@@ -242,7 +243,7 @@ void Interface::get_chunk_info(CpuArg& cpuArg)
 	}
 	chunk_frame_st[0] = cur_frame_id;
 	
-	for(sentid =sent_st; sentid <= sent_en; sentid++)
+	_Cilk_for(sentid =sent_st; sentid <= sent_en; sentid++)
 	{
 		frames_inc = framesBeforeSent[sentid] - cur_frame_id;
 		cur_frame_id = framesBeforeSent[sentid];
