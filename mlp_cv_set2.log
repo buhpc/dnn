@@ -1,0 +1,37 @@
+load norm file ......
+norm file load
+parameters input:
+fea_file:             ../dataset/fea_cv.pfile
+norm_file:            ../dataset/train.norm
+targ_file:            ../dataset/lab_cv.pfile
+outwts_file:          ./mlp_cv.0.wts
+log_file:             ./mlp_cv.0.log
+initwts_file:         ./mlp.0.wts
+train_sent_range:     0-1574
+cv_sent_range:        0-0
+fea_dim:              39
+fea_context:          11
+bunchsize:            1024
+train_cache:          102400
+init_randem_seed:     27863875
+targ_offset:          5
+init_randem_weight_max:           0.100000
+init_randem_weight_min:           -0.100000
+init_randem_bias_max:             0.100000
+init_randem_bias_min:             -0.100000
+learnrate:                        0.768000
+layersizes:                       429,2048,2048,2048,2048,2048,2048,8991,
+nmod:                             1
+remainder:                        0
+discard_prob:                     0.000000
+discardLabs:                      
+Please check...
+Get pfile info over: Training data has 606451 frames, 1575 sentences.
+Get chunk info over: Training sentences have 6 chunks, 590651 samples.
+Get cv chunk info over: CV sentences have 1 chunks, 105 samples.
+starting cross validing:
+cv over
+total samples:589824 
+correct samples: 118650
+accuracy: 20.116169
+total time cost: 348344.531250ms

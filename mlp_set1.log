@@ -1,0 +1,23 @@
+init_randem_seed:     27863875
+targ_offset:          5
+init_randem_weight_max:           0.100000
+init_randem_weight_min:           -0.100000
+init_randem_bias_max:             0.100000
+init_randem_bias_min:             -0.100000
+learnrate:                        0.768000
+layersizes:                       429,2048,2048,2048,2048,2048,2048,8991,
+nmod:                             1
+remainder:                        0
+discard_prob:                     0.000000
+discardLabs:                      
+Please check...
+Get pfile info over: Training data has 390729 frames, 1001 sentences.
+Get chunk info over: Training sentences have 4 chunks, 380689 samples.
+Get cv chunk info over: CV sentences have 1 chunks, 73 samples.
+start training:
+--chunk(0) : containing samples 72704
+--chunk(1) : containing samples 102400
+--chunk(2) : containing samples 102400
+--chunk(3) : containing samples 102400
+training over
+total time cost: 379378.250000ms

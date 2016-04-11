@@ -1,0 +1,23 @@
+train_cache:          102400
+init_randem_seed:     27863875
+targ_offset:          5
+init_randem_weight_max:           0.100000
+init_randem_weight_min:           -0.100000
+init_randem_bias_max:             0.100000
+init_randem_bias_min:             -0.100000
+learnrate:                        0.768000
+layersizes:                       429,2048,2048,2048,2048,2048,2048,8991,
+nmod:                             1
+remainder:                        0
+discard_prob:                     0.000000
+discardLabs:                      
+Please check...
+Get pfile info over: Training data has 606451 frames, 1575 sentences.
+Get chunk info over: Training sentences have 6 chunks, 590651 samples.
+Get cv chunk info over: CV sentences have 1 chunks, 105 samples.
+starting cross validing:
+cv over
+total samples:589824 
+correct samples: 101308
+accuracy: 17.175970
+total time cost: 346983.406250ms
