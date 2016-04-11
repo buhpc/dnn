@@ -5,12 +5,12 @@ TK_LIB2_PATH		?= /opt/intel/lib/intel64
 GCC					?= icpc
 
 #flags
-CCFLAGS				:= -O3 -g -p -Wall -fPIC -xCORE-AVX2
+CCFLAGS				:=  -mavx2 -O3 -g -p -Wall -fPIC -xCORE-AVX2
 LDFLAGS				:=  -L$(TK_LIB_PATH) -L$(TK_LIB2_PATH) -ldl -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 
 INCLUDES			:= -I$(TK_INC_PATH) -I. 
 
-all: build
+all: clean build
 
 
 build: dnntk
