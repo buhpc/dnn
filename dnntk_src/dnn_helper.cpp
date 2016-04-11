@@ -486,8 +486,14 @@ int Interface::Readchunk(int chunk_index, CpuArg& cpuArg, ChunkContainer& oneChu
 
 	tmp_samples_in_chunk += oneChunk.samples_remain;
 	int pre_samples_remain = oneChunk.samples_remain;
-	oneChunk.samples_remain = tmp_samples_in_chunk%cpuArg.bunchSize;
-	samples_in_chunk = tmp_samples_in_chunk - oneChunk.samples_remain;
+	if (tmp_samples_in_chunk < cpuArg.bunchSize) {
+		oneChunk.samples_remain = 0;
+		samples_in_chunk = tmp_samples_in_chunk;
+	}
+	else {
+		oneChunk.samples_remain = tmp_samples_in_chunk%cpuArg.bunchSize;
+		samples_in_chunk = tmp_samples_in_chunk - oneChunk.samples_remain;
+	}
 
 	oneChunk.labelArr += (oneChunk.samples_remain - pre_samples_remain); 
 	oneChunk.dataArr  += (oneChunk.samples_remain - pre_samples_remain)*cpuArg.dnnLayerArr[0];

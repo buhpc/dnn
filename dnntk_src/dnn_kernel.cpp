@@ -1,7 +1,7 @@
 #include "dnn_kernel.h"
 #include <math.h>
 #include <immintrin.h>
-#include <pmmintrin.h>
+//#include <pmmintrin.h>
 #include <xmmintrin.h>
 #include <emmintrin.h>
 
@@ -123,7 +123,7 @@ extern "C" int updateB(float *E, float *B, float *Bdelta, int row, int col, floa
 	float sum = 0.0;
 	for(int i=0; i<col; i++)
 	{
-		sum = 0f;
+		sum = 0.0f;
 		for(int j=0; j<row; j++)
 		{
 			idx = j*col + i;
