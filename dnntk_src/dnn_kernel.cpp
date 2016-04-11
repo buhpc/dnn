@@ -124,7 +124,11 @@ extern "C" int updateB(float *E, float *B, float *Bdelta, int row, int col, floa
 	float sum = 0.0;
 	for(int i=0; i<col; i++)
 	{
+<<<<<<< HEAD
 		sum = 0.0;
+=======
+		sum = 0.0f;
+>>>>>>> c7c26ccbea99ad0e9949f2822b03159d61b8ed78
 		for(int j=0; j<row; j++)
 		{
 			idx = j*col + i;
