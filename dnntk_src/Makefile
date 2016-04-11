@@ -5,7 +5,7 @@ TK_LIB2_PATH		?= /opt/intel/lib/intel64
 GCC					?= icpc
 
 #flags
-CCFLAGS				:=  -mavx -O3 -g -p -Wall -fPIC -xCORE-AVX2
+CCFLAGS				:=  -mavx -O3 -g -p -Wall -fPIC
 
 LDFLAGS				:=  -L$(TK_LIB_PATH) -L$(TK_LIB2_PATH) -ldl -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 
