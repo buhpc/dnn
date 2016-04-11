@@ -120,15 +120,10 @@ extern "C" int updateB(float *E, float *B, float *Bdelta, int row, int col, floa
 	__m256i* Src1 = (__m256i*) E;
 	//__m128* Src2 = (__m128i*) B;
 	//__m128d* Src3 = (__m128d*) Bdelta;
-	//float sum = 0.0f;
-	float sum = 0.0;
+	float sum = 0.0f;
 	for(int i=0; i<col; i++)
 	{
-<<<<<<< HEAD
 		sum = 0.0;
-=======
-		sum = 0.0f;
->>>>>>> c7c26ccbea99ad0e9949f2822b03159d61b8ed78
 		for(int j=0; j<row; j++)
 		{
 			idx = j*col + i;
