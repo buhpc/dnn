@@ -1,4 +1,4 @@
-#include "dnn_kernel.h"z
+#include "dnn_kernel.h"
 #include <math.h>
 #include <immintrin.h>
 
@@ -114,21 +114,21 @@ extern "C" int updateB(float *E, float *B, float *Bdelta, int row, int col, floa
 {	
 	int idx;
 	__m256* Src1 = (__m256*) E;
-	__m256* Src2 = (__m256*) B;
-	__m256* Src3 = (__m256*) Bdelta;
+	__m256i* Src2 = (__m256i*) B;
+	__m256d* Src3 = (__m256d*) Bdelta;
 	//float sum = 0.0f;
-	__m256* sum;
-	for(int i=0; i<col/8; i++)
+	float sum = 0.0;
+	for(int i=0; i<col; i++)
 	{
-		sum = (__m256)0;
-		for(int j=0; j<row/8; j++)
+		sum = 0f;
+		for(int j=0; j<row; j++)
 		{
 			idx = j*col + i;
-			sum += Src1[idx];
+			sum += E[idx];
 		}
 		
-		Src3[i] = (__m256)alpha * sum;
-		Src2[i] += Src3[i];
+		Bdelta[i] = alpha * sum;
+		B[i] += Bdelta[i];
 	}
 	return 0;
 }
