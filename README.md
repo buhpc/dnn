@@ -1,11 +1,13 @@
 # Deep Neural Network
 
 To make:
+
 	cd dnntk_src
 	make clean 
 	make
 
 To run locally:
+
 	cd exp
 	./train.sh
 
