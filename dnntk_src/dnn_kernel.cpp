@@ -5,6 +5,7 @@
 //#include <pmmintrin.h>
 //#include <xmmintrin.h>
 //#include <emmintrin.h>
+#include <pthread.h>
 
 extern "C" int setmatY(float *Y, float *B, int row, int col) 
 {
@@ -117,7 +118,7 @@ extern "C" int updateW(float *W, float *Wdelta, int row, int col)
 extern "C" int updateB(float *E, float *B, float *Bdelta, int row, int col, float alpha)
 {	
 	int idx;
-	__m256* Src1 = (__m256*) E;
+	//__m256* Src1 = (__m256*) E;
 	//__m128i* Src2 = (__m128i*) B;
 	//__m128d* Src3 = (__m128d*) Bdelta;
 	float sum = 0.0f;
