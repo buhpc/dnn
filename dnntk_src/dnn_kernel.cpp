@@ -10,11 +10,9 @@
 #define PACK 8
 typedef __m256 data_t;
 
-
-int rank;//MPI Global Variable
-
 extern "C" int setmatY(float *Y, float *B, int row, int col) 
 {	
+//#pragma offload target(mic) inout(data: length(row*col))
 	data_t* a = (data_t*) Y;
 	data_t* b = (data_t*) B;
 	int idx;
@@ -33,22 +31,29 @@ extern "C" int setmatY(float *Y, float *B, int row, int col)
 
 extern "C" int sigmoidY(float *Y, int row, int col)
 {
-	//data_t* a = (data_t*) Y;
+//#pragma offload target(mic) inout(data: length(row*col))
+	data_t* a = (data_t*) Y;
 	omp_set_num_threads(OMP_THREADS);
+	data_t one = _mm256_set1_ps(1.0f);
 	#pragma omp parallel for
 	for(int i = 0;i < row*col/PACK; ++i)
 	{
-		Y[i] = 1.0f/(1.0f + expf(-Y[i]));
+		a[i] = _mm256_div_ps(one,_m256_add_ps(one,_mm256_exp_ps(-a[i])));
 	}
 }
 
 extern "C" int softmaxZ(float* in_vec, float* out_vec, int row, int col)
 {
+//#pragma offload target(mic) inout(data: length(row*col))
 	data_t* a = (data_t*) in_vec;
 	data_t* b = (data_t*) out_vec;
+	data_t zero = _mm256_set1_ps(0.0f);
+	data_t one = _mm256_set1_ps(1.0f);
+	data_t tmp;
+	data_t sumexp;
 	int idx, base;
-	float max, tmp;
-	float sumexp = 0.0f;
+	float max;
+
 	omp_set_num_threads(OMP_THREADS);
 	#pragma omp parallel for
 	for(int i=0; i<row; i++)
@@ -63,29 +68,46 @@ extern "C" int softmaxZ(float* in_vec, float* out_vec, int row, int col)
 				max = in_vec[idx];
 			}
 		}
-		sumexp = 0.0f;
-		for(int j=0; j<col; j++)
+		data_t sumexp = zero;
+		data_t max_256 = _mm256_set1_ps(max);
+		for(int j=0; j<col/PACK; j++)
 		{
 			idx = i*col + j;
-			tmp = expf(in_vec[idx] - max);
-			sumexp += tmp;
-			in_vec[idx] = tmp;
+			tmp = _mm256_exp_ps(_mm256_sub_ps(a[idx],max_256));
+			sumexp = _mm256_add_ps(sumexp,tmp);
+			a[idx] = tmp;
 		}
-		tmp = 1.0f/sumexp;
-		for(int j=0; j<col; j++)
+
+		float last_exp = 0.0f;
+		last_exp = last_exp & sumexp;
+		last_exp = last_exp & (sumexp >> 32);
+		last_exp = last_exp & (sumexp >> 64);
+		last_exp = last_exp & (sumexp >> 96);
+		last_exp = last_exp & (sumexp >> 128);	
+		last_exp = last_exp & (sumexp >> 160);
+		last_exp = last_exp & (sumexp >> 192);
+		last_exp = last_exp & (sumexp >> 224);
+		last_exp = last_exp & (sumexp >> 256);
+		float last_tmp = 1.0f/last_exp;
+		data_t last_we = _mm256_set1_ps(last_tmp);
+
+		for(int j=0; j<col/PACK; j++)
 		{
 			idx = i*col + j;
-			out_vec[idx] = in_vec[idx] * tmp;
+			b[idx] = _mm256_mul_ps(a[idx],last_we);
 		}
 	}
 }
 
 extern "C" int errorTrans(float *E, float *Y, int row, int col)
 {
+//#pragma offload target(mic) inout(data: length(row*col))
 	data_t* a = (data_t*) E;
 	data_t* b = (data_t*) Y;
-	float tmp;
+	data_t tmp;
 	int idx;
+	data_t one = _mm256_st1_ps(1);
+
 	omp_set_num_threads(OMP_THREADS);
 	#pragma omp parallel for
 	for(int i=0; i<row; i++)
@@ -94,7 +116,7 @@ extern "C" int errorTrans(float *E, float *Y, int row, int col)
 		{
 			idx = i*col + j;
 			tmp = b[idx];
-			a[idx] = a[idx] * tmp * (1-tmp);
+			a[idx] = _m256_mul_ps(a[idx],_m256_mul_ps(tmp,_mm256_sub_ps(1,tmp)));
 		}
 	}
 	return 0;
@@ -102,19 +124,20 @@ extern "C" int errorTrans(float *E, float *Y, int row, int col)
 
 extern "C" int errorOutput(float *E, float *Z, int *T, int row, int col)
 {
+//#pragma offload target(mic) inout(data: length(row*col))
 	data_t* a = (data_t*) E;
 	data_t* b = (data_t*) Z;
 	data_t* c = (data_t*) T;
-	float tmp;
+	int tmp;
 	int idx;
+
 	omp_set_num_threads(OMP_THREADS);
 	#pragma omp parallel for
 	for(int i=0; i<row; i++)
 	{
-		//Make sure to pack j into vector to compare to c
-		for(int j=0; j<col/PACK; j++)
+		for(int j=0; j<col; j++)
 		{
-			idx = i*col + j;
+			idx = i*col + j;	
 			tmp = (j == c[i]) ? 1.0f:0.0f;
 			E[idx] = Z[idx] - tmp;
 		}
@@ -124,9 +147,11 @@ extern "C" int errorOutput(float *E, float *Z, int *T, int row, int col)
 
 extern "C" int updateW(float *W, float *Wdelta, int row, int col)
 {
-	int idx;
+//#pragma offload target(mic) inout(data: length(row*col))
 	data_t* a = (data_t*) W;
 	data_t* b = (data_t*) Wdelta;
+	int idx;
+
 	omp_set_num_threads(OMP_THREADS);
 	#pragma omp parallel for
 	for(int i=0; i<row; i++)
@@ -134,32 +159,36 @@ extern "C" int updateW(float *W, float *Wdelta, int row, int col)
 		for(int j=0; j<col/PACK; j++)
 		{
 			idx = i*col + j;
-			a[idx] += b[idx];
+			a[idx] = _mm256_add_ps(a[idx],b[idx]);
 		}
 	}
 	return 0;
 }
 
 extern "C" int updateB(float *E, float *B, float *Bdelta, int row, int col, float alpha)
-{	
-	int idx;
+{
+//#pragma offload target(mic) inout(data: length(row*col))
 	data_t* a = (data_t*) E;
 	data_t* b = (data_t*) B;
 	data_t* c = (data_t*) Bdelta;
-	float sum = 0.0f;
+	data_t zero = _mm256_set1_ps(0.0f);
+	data_t alpha256 = _mm256_set1_ps(alpha);
+	data_t sum;
+	int idx;
+	
 	omp_set_num_threads(OMP_THREADS);
 	#pragma omp parallel for
 	for(int i=0; i<col/PACK; i++)
 	{
-		sum = 0.0;
+		sum = zero;
 		for(int j=0; j<row; j++)
 		{
 			idx = j*col + i;
-			sum += a[idx];
+			sum = _mm256_add_ps(sum,a[idx]);
 		}
 		
-		c[i] = alpha * sum;
-		b[i] += c[i];
+		c[i] = _mm256_add_ps(alpha256,sum);
+		b[i] = _mm256_add_ps(b[i],c[i]);
 	}
 	return 0;
 }

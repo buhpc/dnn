@@ -6,13 +6,6 @@
 
 int main(int argc, char* argv[])
 {
-	int rank;
-	int size;
-	MPI_init(&argc,&argv);
-
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &size);
-	
 	puts(argv[0]);
 
 	struct timeval timerStart, timerStop;
@@ -45,6 +38,13 @@ int main(int argc, char* argv[])
 	int  chunkCnt  = 0;
 	int  readSize  = 0;
 	int  countCnt = 0;
+	
+	int rank;
+	int size;
+	MPI_init(&argc,&argv);
+
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	while ((readSize = FetchOneChunk(cpuArg, oneChunk)) && readSize) {
 		fprintf(cpuArg.pLogFile,"--chunk(%d) : containing samples %d\n", chunkCnt++, readSize);
 		fflush(cpuArg.pLogFile);
@@ -56,6 +56,8 @@ int main(int argc, char* argv[])
 		}
 
 	}
+	MPI_Finalize();
+
 	fprintf(cpuArg.pLogFile,"training over\n");
 	fflush(cpuArg.pLogFile);
 
