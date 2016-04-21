@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <string.h>
+#include <mpi.h>
 
 int main(int argc, char* argv[])
 {
+	MPI_Init(&argc, &argv);
 	puts(argv[0]);
 
 	struct timeval timerStart, timerStop;
@@ -31,37 +33,98 @@ int main(int argc, char* argv[])
 	}
 
 	InitNodeConfig(cpuArg,nodeArg);
-	
-	//cross valid
-	int validSamples = 0;
-	int totalSamples = 0;
-	int chunkSize    = cpuArg.chunkSize;
 
-	int *h_R = nodeArg.d_R;
-	int *h_T = nodeArg.d_T;
-
-	fprintf(cpuArg.pLogFile,"starting cross validing:\n");
+	//training process
+	fprintf(cpuArg.pLogFile,"start training:\n");
 	fflush(cpuArg.pLogFile);
+	int  chunkCnt  = 0;
+	int  readSize  = 0;
+	int  countCnt = 0;
 
-	while(FetchOneChunk(cpuArg, oneChunk))
-	{
-		while (FetchOneBunch(oneChunk, nodeArg)) {
-			dnnClassify(nodeArg);
+	// Get the number of processes
+	int n;
+	MPI_Comm_size(MPI_COMM_WORLD, &n);
+	printf("Number of nodes %d", n);
 
-			for (int i = 0; i < nodeArg.numN; i++) {
-				if (h_R[i] == h_T[i]) 
-					validSamples++;
+	// Get the rank of the process
+	int rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	// j is the chunck count 
+	int j;
+
+	while ((readSize = FetchOneChunk(cpuArg, oneChunk)) && readSize) {
+		fprintf(cpuArg.pLogFile,"--chunk(%d) : containing samples %d\n", chunkCnt++, readSize);
+
+		fflush(cpuArg.pLogFile);
+
+		// printf("readSize = %d\n", readSize);
+		
+		// printf("Number of nodes (n) = %d ... rank = %d \n", n, rank);
+
+		// Start the chunck and end it
+		int chunkstart;
+		int chunkend;
+
+		int num_bunches = (readSize / cpuArg.bunchSize);
+
+		// printf("num_bunches = %d\n", num_bunches);
+
+		/* divide loop */
+		chunkstart = (num_bunches / n) * rank;
+		if (num_bunches % n > rank){
+			chunkstart += rank;
+			chunkend = chunkstart + (num_bunches / n) + 1;
+		}else{
+			chunkstart += num_bunches % n;
+			chunkend = chunkstart + (num_bunches / n);
+	  	}
+
+	  	// printf("chunkstart = %d <---> chunkend = %d \n", chunkstart, chunkend);
+
+	  	// int read = FetchOneBunch(oneChunk, nodeArg);
+
+	  	// printf("cpuArg.bunchSize = %d\n", cpuArg.bunchSize);
+	  	j = 0;
+		while (FetchOneBunch(oneChunk, nodeArg) == cpuArg.bunchSize) {
+			
+			// grab an nodeArg
+
+			// printf("j = %d\n", j);
+			
+			if ((j >= chunkstart && j < chunkend) || ((rank == (n-1)) && j == chunkend)) {
+				printf("train: %d on node %d \n", ++countCnt, rank);
+				dnnForward (nodeArg);
+				dnnBackward(nodeArg);
+				dnnUpdate  (nodeArg);
 			}
-			totalSamples += nodeArg.numN;
-		}
-	}
 
-	
-	fprintf(cpuArg.pLogFile,"cv over\n");
+			//read = FetchOneBunch(oneChunk, nodeArg);
+
+			j++;
+
+			// end:
+	  		//	goto end;
+		}
+
+		//printf ("j = %d\n", j);
+
+		//			 Original code	
+//		while (FetchOneBunch(oneChunk, nodeArg) == cpuArg.bunchSize) {
+//			MPI_Barrier(MPI_COMM_WORLD);
+//			printf("train: %d \n", ++countCnt);
+//			dnnForward (nodeArg);
+//			dnnBackward(nodeArg);
+//			dnnUpdate  (nodeArg);
+//		}
+
+	}
+	// Finalize the MPI environment.
+	MPI_Finalize();
+
+	fprintf(cpuArg.pLogFile,"training over\n");
 	fflush(cpuArg.pLogFile);
-	fprintf(cpuArg.pLogFile,"total samples:%d \ncorrect samples: %d\naccuracy: %f\n", totalSamples,\
-			validSamples, (float)validSamples / (float)totalSamples * 100.f);
-	fflush(cpuArg.pLogFile);
+
 	WriteWts(nodeArg, cpuArg);
 	gettimeofday(&timerStop, NULL);
 	float timerElapsed = 1000.0 * (timerStop.tv_sec - timerStart.tv_sec) + (timerStop.tv_usec - timerStart.tv_usec) / 1000.0;
