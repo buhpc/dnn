@@ -1,10 +1,10 @@
 # Deep Neural Network
 
-This was an application that was run on Tianhe-2 at ASC 2016. We optimized using mpi and openmp. Take a look at [main.cpp](dnntk/main.cpp) for an example of mpi. Take a look at [dnn_kernel.cpp](dnntk/dnn_kernel.cpp) for an example of openmp.
+This was an application that was run on Tianhe-2 at ASC 2016. We optimized using mpi and openmp. Take a look at [main.cpp](dnntk_src/main.cpp) for an example of mpi. Take a look at [dnn_kernel.cpp](dnntk_src/dnn_kernel.cpp) for an example of openmp.
 
 ### MPI
 
-We farmed out the inner while loop in [main.cpp](dnntk/main.cpp) to a cluster of 8 nodes. The data is separated into chuncks with each chunck containing bunches. The chuncks we were working with each contained 100 bunches and 102400 samples meaning each bunch contained 1024 samples. On the second largest workload there was 525 bunches.
+We farmed out the inner while loop in [main.cpp](dnntk_src/main.cpp) to a cluster of 8 nodes. The data is separated into chuncks with each chunck containing bunches. The chuncks we were working with each contained 100 bunches and 102400 samples meaning each bunch contained 1024 samples. On the second largest workload there was 525 bunches.
 
 In the inner while loop after I got a chunck I solved for the number of bunches within that chunk with the line:
 
